@@ -4,7 +4,8 @@
     "uefibootservicestablelib.h": "c",
     "uefilib.h": "c",
     "frame_buffer_config.hpp": "c",
-    "stdint.h": "c"
+    "stdint.h": "c",
+    "cstdio": "cpp"
   },
   "C_Cpp.errorSquiggles": "Disabled"
 }

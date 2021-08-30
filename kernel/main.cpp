@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <cstdio>
 
 // #@@range_begin(includes)
 #include "frame_buffer_config.hpp"
@@ -51,19 +52,18 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
   }
 
   // #@@range_begin(write_fonts)
-    WriteAscii(*pixel_writer, 50, 50, 'm', {0, 0, 0});
-    WriteAscii(*pixel_writer, 58, 50, 'i', {0, 0, 0});
-    WriteAscii(*pixel_writer, 66, 50, 'k', {0, 0, 0});
-    WriteAscii(*pixel_writer, 74, 50, 'a', {0, 0, 0});
-    WriteAscii(*pixel_writer, 82, 50, 'n', {0, 0, 0});
-    WriteAscii(*pixel_writer, 90, 50, 'O', {0, 0, 0});
-    WriteAscii(*pixel_writer, 98, 50, 'S', {0, 0, 0});
-    WriteAscii(*pixel_writer, 106, 50, 'b', {0, 0, 0});
-    WriteAscii(*pixel_writer, 114, 50, 'y', {0, 0, 0});
-    WriteAscii(*pixel_writer, 122, 50, 'Y', {0, 0, 0});
-    WriteAscii(*pixel_writer, 130, 50, 'u', {0, 0, 0});
-    WriteAscii(*pixel_writer, 138, 50, 'u', {0, 0, 0});
+  int i = 0;
+  for (char c = '!'; c <= '~'; ++c, ++i) {
+    WriteAscii(*pixel_writer, 8 * i, 50, c, {0, 0, 0});
+  }
+  WriteString(*pixel_writer, 0, 66, "Hello, world!", {0, 0, 255});
   // #@@range_end(write_fonts)
+
+  // #@@range_begin(sprintf)
+  char buf[128];
+  sprintf(buf, "1 + 2 = %d", 1 + 2);
+  WriteString(*pixel_writer, 0, 82, buf, {0, 0, 0});
+  // #@@range_end(sprintf)
 
   while (1) __asm__("hlt");
 }
