@@ -4,7 +4,7 @@
 
 class Error {
  public:
-  enum class Code {
+  enum Code {
     kSuccess,
     kFull,
     kEmpty,
