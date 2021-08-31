@@ -7,5 +7,6 @@
     "stdint.h": "c",
     "cstdio": "cpp"
   },
-  "C_Cpp.errorSquiggles": "Disabled"
+  "C_Cpp.errorSquiggles": "Disabled",
+  "editor.tabSize": 2
 }
