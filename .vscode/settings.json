@@ -5,7 +5,8 @@
     "uefilib.h": "c",
     "frame_buffer_config.hpp": "c",
     "stdint.h": "c",
-    "cstdio": "cpp"
+    "cstdio": "cpp",
+    "__locale": "cpp"
   },
   "C_Cpp.errorSquiggles": "Disabled",
   "editor.tabSize": 2

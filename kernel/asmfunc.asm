@@ -13,7 +13,7 @@ IoOut32:
     out dx, eax
     ret
 
-global IoIn32   ; unt32_t IoIn32(uint16_t addr);
+global IoIn32  ; uint32_t IoIn32(uint16_t addr);
 IoIn32:
     mov dx, di    ; dx = addr
     in eax, dx
