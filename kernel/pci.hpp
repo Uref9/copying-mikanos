@@ -63,7 +63,7 @@ namespace pci {
   
   /** @brief 指定された PCI デバイスの 32 ビットレジスタを読み取る */
   uint32_t ReadConfReg(const Device& dev, uint8_t reg_addr);
-
+  /** @brief 指定された PCI デバイスの 32 ビットレジスタに書き込む */
   void WriteConfReg(const Device& dev, uint8_t reg_addr, uint32_t value);
 
   /** @brief バス番号レジスタを読み取る（ヘッダタイプ 1 用）
@@ -94,7 +94,7 @@ namespace pci {
   }
 
   WithError<uint64_t> ReadBar(Device& device, unsigned int bar_index);
-  
+
   /** @brief PCI ケーパビリティレジスタの共通ヘッダ */
   union CapabilityHeader {
     uint32_t data;

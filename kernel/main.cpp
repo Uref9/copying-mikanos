@@ -26,6 +26,7 @@
 #include "usb/xhci/trb.hpp"
 #include "interrupt.hpp"
 #include "asmfunc.h"
+#include "queue.hpp"
 
 const PixelColor kDesktopBGColor{45, 118, 237};
 const PixelColor kDesktopFGColor{255, 255, 255};
@@ -36,9 +37,11 @@ PixelWriter* pixel_writer;
 
 char console_buf[sizeof(Console)];
 Console* console;
+
+char mouse_cursor_buf[sizeof(MouseCursor)];
+MouseCursor* mouse_cursor;
 // #@@range_end(buf)
 
-// #@@range_begin(printk)
 int printk(const char* format, ...) {
   va_list ap;
   int result;
@@ -51,10 +54,6 @@ int printk(const char* format, ...) {
   console->PutString(s);
   return result;
 }
-// #@@range_end(printk)
-
-char mouse_cursor_buf[sizeof(MouseCursor)];
-MouseCursor* mouse_cursor;
 
 void MouseObserver(int8_t displacement_x, int8_t displacement_y) {
   mouse_cursor->MoveRelative({displacement_x, displacement_y});
@@ -83,18 +82,20 @@ void SwitchEhci2Xhci(const pci::Device& xhc_dev) {
 
 usb::xhci::Controller* xhc;
 
+struct Message {
+  enum Type {
+    kInterruptXHCI,
+  } type;
+};
+
+ArrayQueue<Message>* main_queue;
+
 __attribute__((interrupt))
 void IntHandlerXHCI(InterruptFrame* frame) {
-  while (xhc->PrimaryEventRing()->HasFront()) {
-    if (auto err = ProcessEvent(*xhc)) {
-      Log(kError, "Error while ProcessEvent: %s at %s:%d\n",
-          err.Name(), err.File(), err.Line());
-    }
-  }
+  main_queue->Push(Message{Message::kInterruptXHCI});
   NotifyEndOfInterrupt();
 }
 
-// #@@range_begin(call_write_pixel)
 extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
   switch (frame_buffer_config.pixel_format) {
     case kPixelRGBResv8BitPerColor:
@@ -119,10 +120,6 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
                 {0 + 20, kFrameHeight - 60},
                 {kFrameWidth - 20 * 2, 60 - 5},
                 {61, 68, 77});
-  // DrawRectangle(*pixel_writer,
-  //               {10, kFrameHeight - 40},
-  //               {30, 30},
-  //               {160, 160, 160});
   
   console = new(console_buf) Console{
     *pixel_writer, kDesktopFGColor, kDesktopBGColor
@@ -134,6 +131,10 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
   mouse_cursor = new(mouse_cursor_buf) MouseCursor{
     pixel_writer, kDesktopBGColor, {300, 200}
   };
+
+  std::array<Message, 32> main_queue_data;
+  ArrayQueue<Message> main_queue{main_queue_data};
+  ::main_queue = &main_queue;
   
   // #@@range_begin(show_devices)
   auto err = pci::ScanAllBus();
@@ -149,7 +150,6 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
   }
   // #@@range_end(show_devices)
 
-  // #@@range_begin(find_xhc)
   // Intel 製を優先して xHC を探す
   pci::Device* xhc_dev = nullptr;
   for (int i = 0; i < pci::num_device; ++i) {
@@ -166,7 +166,6 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
     Log(kInfo, "xHC has been found: %d.%d.%d\n",
         xhc_dev->bus, xhc_dev->device, xhc_dev->function);
   }
-  // #@@range_end(find_xhc)
 
   // #@@range_begin(load_idt)
   const uint16_t cs = GetCS();
@@ -203,7 +202,6 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
   xhc.Run();
 
   ::xhc = &xhc;
-  __asm__("sti");
 
   usb::HIDMouseDriver::default_observer = MouseObserver;
 
@@ -219,7 +217,34 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
       }
     }
   }
-  while (true) __asm__("hlt");
+  // #@@range_begin(event_loop)
+  while (true) {
+    // #@@range_begin(get_front_message)
+    __asm__("cli");
+    if (main_queue.Count() == 0) {
+      __asm__("sti\n\thlt");
+      continue;
+    }
+
+    Message msg = main_queue.Front();
+    main_queue.Pop();
+    __asm__("sti");
+    // #@@range_end(get_front_message)
+
+    switch (msg.type) {
+      case Message::kInterruptXHCI:
+        while (xhc.PrimaryEventRing()->HasFront()) {
+          if (auto err = ProcessEvent(xhc)) {
+            Log(kError, "Error while ProcessEvent: %s at %s:%d\n",
+                err.Name(), err.File(), err.Line());
+          }
+        }
+        break;
+      default:
+        Log(kError, "Unknown message type: %d\n", msg.type);
+      }
+  }
+  // #@@range_end(event_loop)
 }
 
 extern "C" void __cxa_pure_virtual() {
