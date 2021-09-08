@@ -31,9 +31,8 @@
 #include "segment.hpp"
 #include "paging.hpp"
 #include "memory_manager.hpp"
-
-const PixelColor kDesktopBGColor{45, 118, 237};
-const PixelColor kDesktopFGColor{255, 255, 255};
+#include "window.hpp"
+#include "layer.hpp"
 
 // #@@range_begin(buf)
 char pixel_writer_buf[sizeof(RGBResv8BitPerColorPixelWriter)];
@@ -44,10 +43,6 @@ Console* console;
 
 char memory_manager_buf[sizeof(BitmapMemoryManager)];
 BitmapMemoryManager* memory_manager;
-
-char mouse_cursor_buf[sizeof(MouseCursor)];
-MouseCursor* mouse_cursor;
-// #@@range_end(buf)
 
 int printk(const char* format, ...) {
   va_list ap;
@@ -62,8 +57,11 @@ int printk(const char* format, ...) {
   return result;
 }
 
+unsigned int mouse_layer_id;
+
 void MouseObserver(int8_t displacement_x, int8_t displacement_y) {
-  mouse_cursor->MoveRelative({displacement_x, displacement_y});
+  layer_manager->MoveRelative(mouse_layer_id, {displacement_x, displacement_y});
+  layer_manager->Draw();
 }
 
 void SwitchEhci2Xhci(const pci::Device& xhc_dev) {
@@ -121,26 +119,15 @@ extern "C" void KernelMainNewStack(
         BGRResv8BitPerColorPixelWriter{frame_buffer_config};
       break;
   }
-
-  const int kFrameWidth = frame_buffer_config.horizontal_resolution;
-  const int kFrameHeight = frame_buffer_config.vertical_resolution;
-
-  // #@@range_begin(draw_desktop)
-  FillRectangle(*pixel_writer,
-                {0, 0},
-                {kFrameWidth, kFrameHeight},
-                kDesktopBGColor);
-  FillRectangle(*pixel_writer,
-                {0 + 20, kFrameHeight - 60},
-                {kFrameWidth - 20 * 2, 60 - 5},
-                {61, 68, 77});
   
+  DrawDesktop(*pixel_writer);
+
   console = new(console_buf) Console{
-    *pixel_writer, kDesktopFGColor, kDesktopBGColor
+    kDesktopFGColor, kDesktopBGColor
   };
+  console->SetWriter(pixel_writer);
   printk("Welcome to MikanOS! by yuu\n");
   SetLogLevel(kWarn);
-  // #@@range_end(draw_desktop)
 
   SetupSegments();
 
@@ -179,9 +166,11 @@ extern "C" void KernelMainNewStack(
   memory_manager->SetMemoryRange(FrameID{1}, FrameID{available_end / kBytesPerFrame});
   // #@@range_end(mark_allocated)
 
-  mouse_cursor = new(mouse_cursor_buf) MouseCursor{
-    pixel_writer, kDesktopBGColor, {300, 200}
-  };
+  if (auto err = InitializeHeap(*memory_manager)) {
+    Log(kError, "failed to allocate pages: %s at %s:%d\n",
+        err.Name(), err.File(), err.Line());
+    exit(1);
+  }
 
   std::array<Message, 32> main_queue_data;
   ArrayQueue<Message> main_queue{main_queue_data};
@@ -268,6 +257,38 @@ extern "C" void KernelMainNewStack(
       }
     }
   }
+  // #@@range_begin(main_window)
+  const int kFrameWidth = frame_buffer_config.horizontal_resolution;
+  const int kFrameHeight = frame_buffer_config.vertical_resolution;
+
+  auto bgwindow = std::make_shared<Window>(kFrameWidth, kFrameHeight);
+  auto bgwriter = bgwindow->Writer();
+
+  DrawDesktop(*bgwriter);
+  console->SetWriter(bgwriter);
+
+  auto mouse_window = std::make_shared<Window>(
+      kMouseCursorWidth, kMouseCursorHeight);
+  mouse_window->SetTransparentColor(kMouseTransparentColor);
+  DrawMouseCursor(mouse_window->Writer(), {0, 0});
+
+  layer_manager = new LayerManager;
+  layer_manager->SetWriter(pixel_writer);
+
+  auto bglayer_id = layer_manager->NewLayer()
+    .SetWindow(bgwindow)
+    .Move({0, 0})
+    .ID();
+  mouse_layer_id = layer_manager->NewLayer()
+    .SetWindow(mouse_window)
+    .Move({200, 200})
+    .ID();
+  
+  layer_manager->UpDown(bglayer_id, 0);
+  layer_manager->UpDown(mouse_layer_id, 1);
+  layer_manager->Draw();
+  // #@@range_end(main_window)
+
   // #@@range_begin(event_loop)
   while (true) {
     // #@@range_begin(get_front_message)
@@ -297,6 +318,7 @@ extern "C" void KernelMainNewStack(
   }
   // #@@range_end(event_loop)
 }
+
 
 extern "C" void __cxa_pure_virtual() {
   while (true) __asm__("hlt");
