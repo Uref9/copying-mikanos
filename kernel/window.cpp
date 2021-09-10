@@ -125,11 +125,11 @@ void DrawWindow(PixelWriter& writer, const char* title) {
     for (int x = 0; x < kCloseButtonWidth; ++x) {
       PixelColor c = ToColor(0xffffff);
       if (close_button[y][x] == '@') {
-        c = ToColor(0x000000);
+        c = ToColor(0xaa3228);
       } else if (close_button[y][x] == '$') {
-        c = ToColor(0x848484);
+        c = ToColor(0x864d48);
       } else if (close_button[y][x] == ':') {
-        c = ToColor(0xc6c6c6);
+        c = ToColor(0xed6a5e);
       }
       writer.Write({win_w - 5 - kCloseButtonWidth + x, 5 + y}, c);
     }
