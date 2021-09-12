@@ -76,20 +76,20 @@ namespace {
   const int kCloseButtonWidth = 16;
   const int kCloseButtonHeight = 14;
   const char close_button[kCloseButtonHeight][kCloseButtonWidth + 1] = {
-    "...............@",
-    ".:::::::::::::$@",
-    ".:::::::::::::$@",
-    ".:::@@::::@@::$@",
-    ".::::@@::@@:::$@",
-    ".:::::@@@@::::$@",
-    ".::::::@@:::::$@",
-    ".:::::@@@@::::$@",
-    ".::::@@::@@:::$@",
-    ".:::@@::::@@::$@",
-    ".:::::::::::::$@",
-    ".:::::::::::::$@",
-    ".$$$$$$$$$$$$$$@",
-    "@@@@@@@@@@@@@@@@",
+    "++++++++++++++++",
+    "++++++::::++++++",
+    "++++::::::::++++",
+    "+++:@@::::@@:+++",
+    "++:::@@::@@:::++",
+    "++::::@@@@::::++",
+    "++:::::@@:::::++",
+    "++::::@@@@::::++",
+    "++:::@@::@@:::++",
+    "++::@@::::@@::++",
+    "+++::::::::::+++",
+    "++++::::::::++++",
+    "++++++::::++++++",
+    "++++++++++++++++",
   };
 
   constexpr PixelColor ToColor(uint32_t c) {
@@ -115,23 +115,25 @@ void DrawWindow(PixelWriter& writer, const char* title) {
   fill_rect({win_w - 2, 1}, {1, win_h - 2},         0x848484);
   fill_rect({win_w - 1, 0}, {1, win_h},             0x000000);
   fill_rect({2, 2},         {win_w - 4, win_h - 4}, 0xc6c6c6);
-  fill_rect({3, 3},         {win_w - 6, 18},        0x000084);
+  fill_rect({2, 2},         {win_w - 4, 18},        0x3c293d);
   fill_rect({1, win_h - 2}, {win_w - 2, 1},         0x848484);
   fill_rect({0, win_h - 1}, {win_w, 1},             0x000000);
 
-  WriteString(writer, {24, 4}, title, ToColor(0xffffff));
+  WriteString(writer, {32, 4}, title, ToColor(0xffffff));
 
   for (int y = 0; y < kCloseButtonHeight; ++y) {
     for (int x = 0; x < kCloseButtonWidth; ++x) {
       PixelColor c = ToColor(0xffffff);
       if (close_button[y][x] == '@') {
         c = ToColor(0xaa3228);
-      } else if (close_button[y][x] == '$') {
-        c = ToColor(0x864d48);
+      // } else if (close_button[y][x] == '$') {
+      //   c = ToColor(0x864d48);
       } else if (close_button[y][x] == ':') {
         c = ToColor(0xed6a5e);
+      } else if (close_button[y][x] == '+') {
+        c = ToColor(0x3c293d);
       }
-      writer.Write({win_w - 5 - kCloseButtonWidth + x, 5 + y}, c);
+      writer.Write({5 + x, 4 + y}, c);
     }
   }
 }
