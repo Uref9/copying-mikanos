@@ -296,7 +296,7 @@ extern "C" void KernelMainNewStack(
   }
 
   layer_manager = new LayerManager;
-  layer_manager->SetWriter(&screen);
+  layer_manager->SetScreen(&screen);
 
   auto bglayer_id = layer_manager->NewLayer()
     .SetWindow(bgwindow)
