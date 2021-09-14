@@ -69,8 +69,10 @@
     "string_view": "cpp",
     "typeinfo": "cpp",
     "unordered_map": "cpp",
-    "utility": "cpp"
+    "utility": "cpp",
+    "uefi.h": "c",
+    "loadedimage.h": "c"
   },
-  "C_Cpp.errorSquiggles": "Disabled",
+  
   "editor.tabSize": 2
 }
