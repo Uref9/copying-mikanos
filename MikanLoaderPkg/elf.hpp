@@ -1,1 +1,1 @@
-/Users/yuu/mikanOS_yuu/kernel/elf.hpp
+../kernel/elf.hpp

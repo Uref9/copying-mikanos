@@ -1,1 +1,1 @@
-/Users/yuu/mikanOS_yuu/kernel/frame_buffer_config.hpp
+../kernel/frame_buffer_config.hpp
