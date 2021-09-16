@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstdint>
 
 #include "frame_buffer_config.hpp"
 
