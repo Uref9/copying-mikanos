@@ -12,6 +12,7 @@
 
 #include "graphics.hpp"
 #include "window.hpp"
+#include "message.hpp"
 
 /** @brief Layer は 1 つの層を表す。
  *
@@ -85,6 +86,10 @@ class LayerManager {
 
   /** @brief 指定された座標にウィンドウを持つ最も上に表示されているレイヤーを探す。 */
   Layer* FindLayerByPosition(Vector2D<int> pos, unsigned int exclude_id) const;
+  /** @brief 指定された ID を持つレイヤーを返す。 */
+  Layer* FindLayer(unsigned int id);
+  /** @brief 指定されたレイヤーの現在の高さを返す。 */
+  int GetHeight(unsigned int id);
 
  private:
   FrameBuffer* screen_{nullptr};
@@ -92,10 +97,24 @@ class LayerManager {
   std::vector<std::unique_ptr<Layer>> layers_{};
   std::vector<Layer*> layer_stack_{};
   unsigned int latest_id_{0};
-
-  Layer* FindLayer(unsigned int id);
 };
 
 inline LayerManager* layer_manager;
 
+class ActiveLayer {
+ public:
+  ActiveLayer(LayerManager& manager);
+  void SetMouseLayer(unsigned int mouse_layer);
+  void Activate(unsigned int layer_id);
+  unsigned int GetActive() const { return active_layer_; }
+
+ private:
+  LayerManager& manager_;
+  unsigned int active_layer_{0};
+  unsigned int mouse_layer_{0};
+};
+
+inline ActiveLayer* active_layer;
+
 void InitializeLayer();
+void ProcessLayerMessage(const Message& msg);

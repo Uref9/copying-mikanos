@@ -57,9 +57,6 @@ unsigned int Console::LayerID() const {
   return layer_id_;
 }
 
-
-
-
 void Console::Newline() {
   cursor_column_ = 0;
   if (cursor_row_ < kRows - 1) {
@@ -97,5 +94,4 @@ void InitializeConsole() {
     kDesktopFGColor, kDesktopBGColor
   };
   console->SetWriter(screen_writer);
-
 }
