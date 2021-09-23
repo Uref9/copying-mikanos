@@ -117,6 +117,7 @@ class ActiveLayer {
 };
 
 inline ActiveLayer* active_layer;
+inline std::map<unsigned int, uint64_t>* layer_task_map;
 
 void InitializeLayer();
 void ProcessLayerMessage(const Message& msg);

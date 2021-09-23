@@ -243,48 +243,57 @@ extern "C" void KernelMainNewStack(
     __asm__("sti");
 
     switch (msg->type) {
-      case Message::kInterruptXHCI:
-        usb::xhci::ProcessEvents();
-        break;
-      case Message::kTimerTimeout:
-        if (msg->arg.timer.value == kTextboxCursorTimer) {
-          __asm__("cli");
-          timer_manager->AddTimer(
-              Timer{msg->arg.timer.timeout + kTimer05Sec, kTextboxCursorTimer});
-          __asm__("sti");
-          textbox_cursor_visible = !textbox_cursor_visible;
-          DrawTextCursor(textbox_cursor_visible);
-          layer_manager->Draw(text_window_layer_id);
+    case Message::kInterruptXHCI:
+      usb::xhci::ProcessEvents();
+      break;
+    case Message::kTimerTimeout:
+      if (msg->arg.timer.value == kTextboxCursorTimer) {
+        __asm__("cli");
+        timer_manager->AddTimer(
+            Timer{msg->arg.timer.timeout + kTimer05Sec, kTextboxCursorTimer});
+        __asm__("sti");
+        textbox_cursor_visible = !textbox_cursor_visible;
+        DrawTextCursor(textbox_cursor_visible);
+        layer_manager->Draw(text_window_layer_id);
 
-          __asm__("cli");
-          task_manager->SendMessage(task_terminal_id, *msg);
-          __asm__("sti");
+        __asm__("cli");
+        task_manager->SendMessage(task_terminal_id, *msg);
+        __asm__("sti");
+      }
+      break;
+    case Message::kKeyPush:
+      if (auto act = active_layer->GetActive(); act == text_window_layer_id) {
+        InputTextWindow(msg->arg.keyboard.ascii);
+      } else if (act == task_b_window_layer_id) {
+        if (msg->arg.keyboard.ascii == 's') {
+          printk("sleep TaskB: %s\n", task_manager->Sleep(taskb_id).Name());
+        } else if (msg->arg.keyboard.ascii == 'w') {
+          printk("wakeup TaskB: %s\n", task_manager->Wakeup(taskb_id).Name());
         }
-        break;
-      case Message::kKeyPush:
-        if (auto act = active_layer->GetActive(); act == text_window_layer_id) {
-          InputTextWindow(msg->arg.keyboard.ascii);
-        } else if (act == task_b_window_layer_id) {
-          if (msg->arg.keyboard.ascii == 's') {
-            printk("sleep TaskB: %s\n", task_manager->Sleep(taskb_id).Name());
-          } else if (msg->arg.keyboard.ascii == 'w') {
-            printk("wakeup TaskB: %s\n", task_manager->Wakeup(taskb_id).Name());
-          }
+      } else {
+        __asm__("cli");
+        auto task_it = layer_task_map->find(act);
+        __asm__("sti");
+        if (task_it != layer_task_map->end()) {
+          __asm__("cli");
+          task_manager->SendMessage(task_it->second, *msg);
+          __asm__("sti");
         } else {
           printk("key push not handled: keycode %02x, ascii %02x\n",
               msg->arg.keyboard.keycode,
               msg->arg.keyboard.ascii);
         }
-        break;
-      case Message::kLayer:
-        ProcessLayerMessage(*msg);
-        __asm__("cli");
-        task_manager->SendMessage(msg->src_task, Message{Message::kLayerFinish});
-        __asm__("sti");
-        break;
-      default:
-        Log(kError, "Unknown message type: %d\n", msg->type);
       }
+      break;
+    case Message::kLayer:
+      ProcessLayerMessage(*msg);
+      __asm__("cli");
+      task_manager->SendMessage(msg->src_task, Message{Message::kLayerFinish});
+      __asm__("sti");
+      break;
+    default:
+      Log(kError, "Unknown message type: %d\n", msg->type);
+    }
   }
 }
 
