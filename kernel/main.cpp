@@ -162,6 +162,7 @@ extern "C" void KernelMainNewStack(
   usb::xhci::Initialize();
   InitializeKeyboard();
   InitializeMouse();
+
   
   char str[128];
 
