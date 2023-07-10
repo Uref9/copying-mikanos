@@ -7,7 +7,7 @@ OBJS = main.o graphics.o mouse.o font.o hankaku.o newlib_support.o console.o \
        usb/xhci/port.o usb/xhci/device.o usb/xhci/devmgr.o usb/xhci/registers.o \
        usb/classdriver/base.o usb/classdriver/hid.o usb/classdriver/keyboard.o \
        usb/classdriver/mouse.o
-DEPENDS = $(join $(dir $(OBJS)),$(addprefix .,$(notdir $(OBJS:.o=.d))))
+# DEPENDS = $(join $(dir $(OBJS)),$(addprefix .,$(notdir $(OBJS:.o=.d))))
 
 CPPFLAGS += -I.
 CFLAGS   += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mno-red-zone
@@ -29,20 +29,20 @@ kernel.elf: $(OBJS) Makefile
 %.o: %.cpp Makefile
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-.%.d: %.cpp
-	clang++ $(CPPFLAGS) $(CXXFLAGS) -MM $< > $@.tmp
-	$(eval OBJ = $(<:.cpp=.o))
-	sed 's|$(notdir $(OBJ))|$(OBJ)|' $@.tmp > $@
-	rm $@.tmp
+# .%.d: %.cpp
+# 	clang++ $(CPPFLAGS) $(CXXFLAGS) -MM $< > $@.tmp
+# 	$(eval OBJ = $(<:.cpp=.o))
+# 	sed 's|$(notdir $(OBJ))|$(OBJ)|' $@.tmp > $@
+# 	rm $@.tmp
 
 %.o: %.c Makefile
 	clang $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-.%.d: %.c
-	clang $(CPPFLAGS) $(CFLAGS) -MM $< > $@
-	$(eval OBJ = $(<:.c=.o))
-	sed 's|$(notdir $(OBJ))|$(OBJ)|' $@.tmp > $@
-	rm $@.tmp
+# .%.d: %.c
+# 	clang $(CPPFLAGS) $(CFLAGS) -MM $< > $@
+# 	$(eval OBJ = $(<:.c=.o))
+# 	sed 's|$(notdir $(OBJ))|$(OBJ)|' $@.tmp > $@
+# 	rm $@.tmp
 
 %.o: %.asm Makefile
 	nasm -f elf64 -o $@ $<
@@ -53,11 +53,11 @@ hankaku.bin: hankaku.txt
 hankaku.o: hankaku.bin
 	objcopy -I binary -O elf64-x86-64 -B i386:x86-64 $< $@
 
-.%.d: %.bin
-	touch $@
+# .%.d: %.bin
+# 	touch $@
 
-.PHONY: depends
-depends:
-	$(MAKE) $(DEPENDS)
+# .PHONY: depends
+# depends:
+# 	$(MAKE) $(DEPENDS)
 
--include $(DEPENDS)
+# -include $(DEPENDS)
