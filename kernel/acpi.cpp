@@ -2,7 +2,6 @@
 
 #include <cstring>
 #include <cstdlib>
-
 #include "asmfunc.h"
 #include "logger.hpp"
 
@@ -33,11 +32,11 @@ bool RSDP::IsValid() const {
     Log(kDebug, "ACPI revision must be 2: %d\n", this->revision);
     return false;
   }
-  if (auto sum = SumBytes(this, 20); sum !=0) {
+  if (auto sum = SumBytes(this, 20); sum != 0) {
     Log(kDebug, "sum of 20 bytes must be 0: %d\n", sum);
     return false;
   }
-  if (auto sum = SumBytes(this, 36); sum !=0) {
+  if (auto sum = SumBytes(this, 36); sum != 0) {
     Log(kDebug, "sum of 36 bytes must be 0: %d\n", sum);
     return false;
   }
@@ -49,7 +48,7 @@ bool DescriptionHeader::IsValid(const char* expected_signature) const {
     Log(kDebug, "invalid signature: %.4s\n", this->signature);
     return false;
   }
-  if (auto sum = SumBytes(this, this->length); sum !=0) {
+  if (auto sum = SumBytes(this, this->length); sum != 0) {
     Log(kDebug, "sum of %u bytes must be 0: %d\n", this->length, sum);
     return false;
   }
@@ -57,7 +56,7 @@ bool DescriptionHeader::IsValid(const char* expected_signature) const {
 }
 
 const DescriptionHeader& XSDT::operator[](size_t i) const {
-  auto entries = reinterpret_cast<const uint64_t*> (&this->header + 1);
+  auto entries = reinterpret_cast<const uint64_t*>(&this->header + 1);
   return *reinterpret_cast<const DescriptionHeader*>(entries[i]);
 }
 
@@ -68,7 +67,7 @@ size_t XSDT::Count() const {
 void WaitMilliseconds(unsigned long msec) {
   const bool pm_timer_32 = (fadt->flags >> 8) & 1;
   const uint32_t start = IoIn32(fadt->pm_tmr_blk);
-  uint32_t end = start + kPMTimerFreq * msec /1000;
+  uint32_t end = start + kPMTimerFreq * msec / 1000;
   if (!pm_timer_32) {
     end &= 0x00ffffffu;
   }

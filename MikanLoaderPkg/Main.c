@@ -443,11 +443,10 @@ EFI_STATUS EFIAPI UefiMain(
     }
   }
 
-  typedef void __attribute__((sysv_abi)) 
-    EntryPointType(const struct FrameBufferConfig*,
-                   const struct MemoryMap*,
-                   const VOID*,
-                   VOID*);
+  typedef void EntryPointType(const struct FrameBufferConfig*,
+                              const struct MemoryMap*,
+                              const VOID*,
+                              VOID*);
   EntryPointType* entry_point = (EntryPointType*)entry_addr;
   entry_point(&config, &memmap, acpi_table, volume_image);
 

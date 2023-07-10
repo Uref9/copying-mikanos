@@ -2,7 +2,7 @@ TARGET = kernel.elf
 OBJS = main.o graphics.o mouse.o font.o hankaku.o newlib_support.o console.o \
        pci.o asmfunc.o libcxx_support.o logger.o interrupt.o segment.o paging.o memory_manager.o \
        window.o layer.o timer.o frame_buffer.o acpi.o keyboard.o task.o terminal.o \
-			 fat.o \
+       fat.o \
        usb/memory.o usb/device.o usb/xhci/ring.o usb/xhci/trb.o usb/xhci/xhci.o \
        usb/xhci/port.o usb/xhci/device.o usb/xhci/devmgr.o usb/xhci/registers.o \
        usb/classdriver/base.o usb/classdriver/hid.o usb/classdriver/keyboard.o \
@@ -13,7 +13,7 @@ CPPFLAGS += -I.
 CFLAGS   += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mno-red-zone
 CXXFLAGS += -O2 -Wall -g --target=x86_64-elf -ffreestanding -mno-red-zone \
             -fno-exceptions -fno-rtti -std=c++17
-LDFLAGS  += --entry KernelMain -z norelro --image-base 0x100000 --static -z separate-code
+LDFLAGS  += --entry KernelMain -z norelro --image-base 0x100000 --static
 
 
 .PHONY: all
@@ -30,9 +30,10 @@ kernel.elf: $(OBJS) Makefile
 	clang++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 .%.d: %.cpp
-	clang++ $(CPPFLAGS) $(CXXFLAGS) -MM $< > $@
+	clang++ $(CPPFLAGS) $(CXXFLAGS) -MM $< > $@.tmp
 	$(eval OBJ = $(<:.cpp=.o))
-	sed -I '' -e 's|$(notdir $(OBJ))|$(OBJ)|' $@
+	sed 's|$(notdir $(OBJ))|$(OBJ)|' $@.tmp > $@
+	rm $@.tmp
 
 %.o: %.c Makefile
 	clang $(CPPFLAGS) $(CFLAGS) -c $< -o $@
@@ -40,7 +41,9 @@ kernel.elf: $(OBJS) Makefile
 .%.d: %.c
 	clang $(CPPFLAGS) $(CFLAGS) -MM $< > $@
 	$(eval OBJ = $(<:.c=.o))
-	sed -I '' -e 's|$(notdir $(OBJ))|$(OBJ)|' $@
+	sed 's|$(notdir $(OBJ))|$(OBJ)|' $@.tmp > $@
+	rm $@.tmp
+
 %.o: %.asm Makefile
 	nasm -f elf64 -o $@ $<
 
