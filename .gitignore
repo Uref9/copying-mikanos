@@ -1,8 +1,8 @@
 kernel.elf
 hankaku.bin
-*.o
-.*.d
 .vscode
 .DS_Store
-disk.img
-kernel/disk.img
+*.EFI
+**/*.o
+**/.*.d
+**/disk.img
