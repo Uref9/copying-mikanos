@@ -23,6 +23,10 @@ all: $(TARGET)
 clean:
 	rm -rf *.o
 
+.PHONY: dclean
+dclean:
+	rm -rf .*.d
+
 kernel.elf: $(OBJS) Makefile
 	ld.lld $(LDFLAGS) -o kernel.elf $(OBJS) -lc -lc++ -lc++abi
 
