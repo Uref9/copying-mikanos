@@ -112,8 +112,7 @@ EFI_STATUS OpenRootDir(EFI_HANDLE image_handle, EFI_FILE_PROTOCOL** root) {
   if (EFI_ERROR(status)) {
     return status;
   }
-  fs->OpenVolume(fs, root);
-  return EFI_SUCCESS;
+  return fs->OpenVolume(fs, root);
 }
 
 EFI_STATUS OpenGOP(EFI_HANDLE image_handle,
