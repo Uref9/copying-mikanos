@@ -112,6 +112,7 @@ EFI_STATUS OpenRootDir(EFI_HANDLE image_handle, EFI_FILE_PROTOCOL** root) {
   if (EFI_ERROR(status)) {
     return status;
   }
+  
   return fs->OpenVolume(fs, root);
 }
 
