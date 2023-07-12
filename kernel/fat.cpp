@@ -42,7 +42,7 @@ unsigned long NextCluster(unsigned long cluster) {
       reinterpret_cast<uintptr_t>(boot_volume_image) + fat_offset);
   uint32_t next = fat[cluster];
   if (next >= 0x0ffffff8ul) {
-    return kEndOfClusterchain;
+    return fat::kEndOfClusterchain;
   }
   return next;
 }
@@ -52,7 +52,7 @@ DirectoryEntry* FindFile(const char* name, unsigned long directory_cluster) {
     directory_cluster = boot_volume_image->root_cluster;
   }
 
-  while (directory_cluster != kEndOfClusterchain) {
+  while (directory_cluster != fat::kEndOfClusterchain) {
     auto dir = GetSectorByCluster<DirectoryEntry>(directory_cluster);
     for (int i = 0; i < bytes_per_cluster / sizeof(DirectoryEntry); ++i) {
       if (NameIsEqual(dir[i], name)) {
@@ -85,7 +85,7 @@ bool NameIsEqual(const DirectoryEntry& entry, const char* name) {
 
 size_t LoadFile(void* buf, size_t len, const DirectoryEntry& entry) {
   auto is_valid_cluster = [](uint32_t c) {
-    return c != 0 && c != kEndOfClusterchain;
+    return c != 0 && c != fat::kEndOfClusterchain;
   };
   auto cluster = entry.FirstCluster();
 
